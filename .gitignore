@@ -1,0 +1,5 @@
+.npmignore
+*.js
+*.d.ts
+*.js.map
+*.d.ts.map
