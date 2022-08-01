@@ -1,4 +1,4 @@
-import { Method } from "axios";
+import { AxiosError, Method } from "axios";
 import { useCallback, useEffect, useReducer } from "react";
 import { useAxios } from "../../context";
 import { useMounted } from "../useMounted";
@@ -15,9 +15,10 @@ export type AxiosFetchPolicy = "cache-only" | "cache-and-network" | "network-onl
 export interface UseFetchConfig {
     url: string;
     fetchPolicy?: AxiosFetchPolicy;
-    params: Record<string, any>;
+    params?: Record<string, any>;
     method?: Method;
     lazy?: boolean;
+    skip?: boolean;
 }
 
 export type UseFetchReturn<D = any> = [
@@ -36,7 +37,7 @@ const REDUCER_INITIAL_STATE: ReducerState = {
 };
 
 export function useFetch<D = any>(options: UseFetchConfig): UseFetchReturn<D> {
-    const { params, url, fetchPolicy = "cache-and-network", method = "get", lazy } = options;
+    const { params, url, fetchPolicy = "cache-and-network", method = "get", lazy, skip } = options;
 
     const { cache, client } = useAxios();
 
@@ -47,7 +48,7 @@ export function useFetch<D = any>(options: UseFetchConfig): UseFetchReturn<D> {
         REDUCER_INITIAL_STATE
     );
 
-    const okToFetch = mounted || !lazy;
+    const okToFetch = mounted && (!lazy || !skip);
 
     const performAxiosAction = useCallback(
         async <P>(options?: P) => {
@@ -58,23 +59,31 @@ export function useFetch<D = any>(options: UseFetchConfig): UseFetchReturn<D> {
                     params: options ?? params,
                 });
 
-            switch (fetchPolicy) {
-                case "network-only":
-                    const res_1 = await axiosFetchFunction();
+            try {
+                switch (fetchPolicy) {
+                    case "network-only":
+                        dispatch({ type: "FETCHING" });
 
-                    return dispatch({ type: "NETWORK-ONLY-FETCHED", payload: res_1.data });
+                        const res_1 = await axiosFetchFunction();
 
-                case "cache-only":
-                    return dispatch({ type: "CACHE-ONLY-FETCHED" });
+                        return dispatch({ type: "NETWORK-ONLY-FETCHED", payload: res_1.data });
 
-                case "cache-and-network":
-                    if (cache.exists(url)) {
+                    case "cache-only":
                         return dispatch({ type: "CACHE-ONLY-FETCHED" });
-                    }
 
-                    const res_2 = await axiosFetchFunction();
+                    case "cache-and-network":
+                        if (cache.exists(url)) {
+                            return dispatch({ type: "CACHE-ONLY-FETCHED" });
+                        }
 
-                    return dispatch({ type: "CACHE-AND-NETWORK-FETCHED", payload: res_2.data });
+                        dispatch({ type: "FETCHING" });
+
+                        const res_2 = await axiosFetchFunction();
+
+                        return dispatch({ type: "CACHE-AND-NETWORK-FETCHED", payload: res_2.data });
+                }
+            } catch (error) {
+                dispatch({ type: "ERROR", payload: error as AxiosError });
             }
         },
         [params, url, fetchPolicy, method]
@@ -82,7 +91,7 @@ export function useFetch<D = any>(options: UseFetchConfig): UseFetchReturn<D> {
 
     useEffect(() => {
         if (okToFetch) {
-            performAxiosAction(options.params);
+            performAxiosAction(params);
         }
     }, [okToFetch, params]);
 

@@ -16,9 +16,10 @@ const AxiosContext = React.createContext<AxiosContext>({} as any);
 
 export const AxiosProvider: React.FC<AxiosProviderProps> = props => {
     const client = useAxiosClient(props.config);
+    const cache = React.useRef(new AxiosCache());
 
     return (
-        <AxiosContext.Provider value={{ cache: new AxiosCache(), client }}>
+        <AxiosContext.Provider value={{ cache: cache.current, client }}>
             {props.children}
         </AxiosContext.Provider>
     );

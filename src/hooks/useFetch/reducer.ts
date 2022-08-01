@@ -48,14 +48,27 @@ export function AxiosFetchReducer(cache: AxiosCache, options: UseFetchConfig) {
                     data = action.payload;
                 }
 
+                cache.save(options.url, data);
+
                 return {
                     ...state,
                     data,
                     status: AxiosFetchStatus.IDLE,
                 };
 
+            case "NETWORK-ONLY-FETCHED":
+                return {
+                    ...state,
+                    data: action.payload,
+                    status: AxiosFetchStatus.IDLE,
+                };
+
             case "ERROR":
-                return { ...state, error: action.payload, status: AxiosFetchStatus.ERROR };
+                return {
+                    ...state,
+                    error: action.payload,
+                    status: AxiosFetchStatus.ERROR,
+                };
 
             default:
                 throw new Error("[AXIOS REDUCER] Unknown action type: " + (action as any).type);
