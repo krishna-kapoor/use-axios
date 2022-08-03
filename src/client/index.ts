@@ -1,6 +1,8 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import { useMemo } from "react";
 
+export * from "./createConfig";
+
 let GLOBAL_AXIOS_CLIENT: AxiosInstance;
 
 function createAxiosInstance(config: AxiosRequestConfig) {

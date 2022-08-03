@@ -1,30 +1,26 @@
 import { AxiosError } from "axios";
-import { AxiosFetchStatus, UseFetchConfig } from ".";
+import { Reducer } from "react";
+import { Action, ActionWithoutPayload, AxiosFetchStatus, ErrorAction, FetchingAction } from ".";
 import { AxiosCache } from "../../cache";
+import { UseFetchConfig } from "../hooks/useFetch";
 
-export type Action<T, P> = { type: T; payload: P };
-export type ActionWithoutPayload<T> = { type: T };
-
-export type ReducerActions<D = any> =
-    | ActionWithoutPayload<"FETCHING">
+type ReducerActions<D = any> =
+    | FetchingAction
     | ActionWithoutPayload<"CACHE-ONLY-FETCHED">
     | Action<"CACHE-AND-NETWORK-FETCHED", D>
     | Action<"NETWORK-ONLY-FETCHED", D>
-    | Action<"ERROR", AxiosError<unknown, D>>;
+    | ErrorAction<D>;
 
-export type Reducer<D = any> = (
-    state: ReducerState<D>,
-    action: ReducerActions<D>
-) => ReducerState<D>;
-
-export interface ReducerState<D = any> {
+export interface AxiosFetchReducerState<D = any> {
     data: D | undefined;
     status: AxiosFetchStatus;
     error: AxiosError<unknown, D> | undefined;
 }
 
+export type TAxiosFetchReducer<D = any> = Reducer<AxiosFetchReducerState<D>, ReducerActions<D>>;
+
 export function AxiosFetchReducer(cache: AxiosCache, options: UseFetchConfig) {
-    return <D>(state: ReducerState<D>, action: ReducerActions<D>) => {
+    return <D>(state: AxiosFetchReducerState<D>, action: ReducerActions<D>) => {
         switch (action.type) {
             case "FETCHING":
                 return {
@@ -71,7 +67,7 @@ export function AxiosFetchReducer(cache: AxiosCache, options: UseFetchConfig) {
                 };
 
             default:
-                throw new Error("[AXIOS REDUCER] Unknown action type: " + (action as any).type);
+                throw new Error("[useFetch] Unknown action type: " + (action as any).type);
         }
     };
 }

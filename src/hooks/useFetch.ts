@@ -1,63 +1,49 @@
-import { AxiosError, Method } from "axios";
+import { AxiosError } from "axios";
 import { useCallback, useEffect, useReducer } from "react";
-import { useAxios } from "../../context";
-import { useMounted } from "../useMounted";
-import { AxiosFetchReducer, Reducer, ReducerState } from "./reducer";
-
-export enum AxiosFetchStatus {
-    IDLE,
-    LOADING,
-    ERROR,
-}
+import { useAxios } from "../context";
+import { AxiosFetchStatus } from "../reducers";
+import { AxiosFetchReducer, TAxiosFetchReducer } from "../reducers/use-fetch-reducer";
+import { AxiosFetcher, AxiosFetchInfo, REDUCER_INITIAL_STATE } from "./constants";
+import { useMounted } from "./useMounted";
 
 export type AxiosFetchPolicy = "cache-only" | "cache-and-network" | "network-only";
-
-export interface UseFetchConfig {
+export interface UseFetchConfig<P = Record<string, any>> {
     url: string;
     fetchPolicy?: AxiosFetchPolicy;
-    params?: Record<string, any>;
-    method?: Method;
-    lazy?: boolean;
+    params?: P;
     skip?: boolean;
 }
 
-export type UseFetchReturn<D = any> = [
-    D | undefined,
-    {
-        error: ReducerState["error"];
-        loading: boolean;
-    },
-    <P>(options: P) => void
-];
+export type UseFetchReturn<D = any> = [D | undefined, AxiosFetchInfo<D>, AxiosFetcher];
 
-const REDUCER_INITIAL_STATE: ReducerState = {
-    data: undefined,
-    status: AxiosFetchStatus.IDLE,
-    error: undefined,
-};
+/**
+ * A hook to fetch data from the provided `url`.
+ * @param options `UseFetchOptions`
+ */
+export function useFetch<D = any, P = Record<string, any>>(
+    options: UseFetchConfig<P>
+): UseFetchReturn<D> {
+    const { params, url, fetchPolicy = "cache-and-network", skip } = options;
 
-export function useFetch<D = any>(options: UseFetchConfig): UseFetchReturn<D> {
-    const { params, url, fetchPolicy = "cache-and-network", method = "get", lazy, skip } = options;
+    const ReactAxios = useAxios();
 
-    const { cache, client } = useAxios();
+    if (!ReactAxios) {
+        throw new Error("Please wrap your application with `AxiosProvider`.");
+    }
 
     const mounted = useMounted();
 
-    const [state, dispatch] = useReducer<Reducer<D>>(
-        AxiosFetchReducer(cache, options),
+    const [state, dispatch] = useReducer<TAxiosFetchReducer<D>>(
+        AxiosFetchReducer(ReactAxios.cache, options),
         REDUCER_INITIAL_STATE
     );
 
-    const okToFetch = mounted && (!lazy || !skip);
+    const okToFetch = mounted && !skip;
 
-    const performAxiosAction = useCallback(
-        async <P>(options?: P) => {
+    const performAxiosAction = useCallback<AxiosFetcher<void>>(
+        async options => {
             const axiosFetchFunction = () =>
-                client({
-                    url,
-                    method,
-                    params: options ?? params,
-                });
+                ReactAxios.client.get<D>(url, { params: options ?? params });
 
             try {
                 switch (fetchPolicy) {
@@ -72,7 +58,7 @@ export function useFetch<D = any>(options: UseFetchConfig): UseFetchReturn<D> {
                         return dispatch({ type: "CACHE-ONLY-FETCHED" });
 
                     case "cache-and-network":
-                        if (cache.exists(url)) {
+                        if (ReactAxios.cache.exists(url)) {
                             return dispatch({ type: "CACHE-ONLY-FETCHED" });
                         }
 
@@ -86,7 +72,7 @@ export function useFetch<D = any>(options: UseFetchConfig): UseFetchReturn<D> {
                 dispatch({ type: "ERROR", payload: error as AxiosError });
             }
         },
-        [params, url, fetchPolicy, method]
+        [params, url, fetchPolicy]
     );
 
     useEffect(() => {
@@ -100,6 +86,7 @@ export function useFetch<D = any>(options: UseFetchConfig): UseFetchReturn<D> {
         {
             error: state.error,
             loading: state.status === AxiosFetchStatus.LOADING,
+            status: state.status,
         },
         performAxiosAction,
     ];
