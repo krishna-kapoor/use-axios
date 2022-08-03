@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import { useCallback, useEffect, useReducer, useRef } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 import { useAxios } from "../context";
 import { AxiosFetchStatus } from "../reducers";
 import { AxiosFetchReducer, TAxiosFetchReducer } from "../reducers/use-fetch-reducer";
@@ -20,28 +20,6 @@ export interface UseFetchConfig extends FetchConfig {
 }
 
 export type UseFetchReturn<D = any> = [D | undefined, AxiosFetchInfo<D>, AxiosFetcher];
-
-function useAbortController() {
-    const abortControllerRef = useRef<AbortController>();
-    const getAbortController = useCallback(() => {
-        if (!abortControllerRef.current) {
-            abortControllerRef.current = new AbortController();
-        }
-
-        return abortControllerRef.current;
-    }, []);
-
-    const getAbortControllerSignal = useCallback(
-        () => getAbortController().signal,
-        [getAbortController]
-    );
-
-    useEffect(() => {
-        return () => getAbortController().abort();
-    }, [getAbortController]);
-
-    return getAbortControllerSignal;
-}
 
 /**
  * A hook to fetch data from the provided `url`..
