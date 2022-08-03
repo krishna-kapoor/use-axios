@@ -9,8 +9,9 @@
         "declarationMap": true,
         "skipLibCheck": true,
         "sourceMap": true,
-        "strict": true
+        "strict": true,
+        "allowJs": false
     },
-    "include": ["src/**/*.ts", "src/**/*.tsx"],
+    "include": ["src"],
     "exclude": ["node_modules"]
 }

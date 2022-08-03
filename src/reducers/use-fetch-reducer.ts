@@ -1,7 +1,7 @@
 import { AxiosError } from "axios";
 import { Reducer } from "react";
 import { Action, ActionWithoutPayload, AxiosFetchStatus, ErrorAction, FetchingAction } from ".";
-import { AxiosCache } from "../../cache";
+import { AxiosCache } from "../cache";
 import { UseFetchConfig } from "../hooks/useFetch";
 
 type ReducerActions<D = any> =

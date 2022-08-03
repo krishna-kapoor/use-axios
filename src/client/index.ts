@@ -12,7 +12,3 @@ function createAxiosInstance(config: AxiosRequestConfig) {
 export function initializeAxiosInstance(config: AxiosRequestConfig) {
     return GLOBAL_AXIOS_CLIENT ?? createAxiosInstance(config);
 }
-
-export function useAxiosClient(config: AxiosRequestConfig) {
-    return useMemo(() => initializeAxiosInstance(config), [config]);
-}
