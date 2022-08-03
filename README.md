@@ -24,4 +24,21 @@ export default function App({ Component, pageProps }) {
 
 Now you are ready to use hooks like `useFetch` and `useLazyFetch` within your component tree for data fetching.
 
-##
+## `useFetch`
+
+A hook to fetch data from the provided `url`.
+
+```tsx
+export function Component() {
+    const [data, { loading, error, status }, fetchDataAgain] = useFetch<YourDataType>({
+        url: "<your-url>",
+    });
+
+    return (
+        <div>
+            Display your data here.
+            <button onClick={() => fetchDataAgain()}>Fetch again?</button>
+        </div>
+    );
+}
+```

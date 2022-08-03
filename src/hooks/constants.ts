@@ -1,3 +1,4 @@
+import { AxiosRequestHeaders } from "axios";
 import { AxiosFetchStatus } from "../reducers";
 import { AxiosFetchReducerState } from "../reducers/use-fetch-reducer";
 
@@ -14,3 +15,12 @@ export interface AxiosFetchInfo<D = any> {
 }
 
 export type AxiosFetcher<R = void> = <P>(options?: P) => Promise<R>;
+
+export type ParamsType = Record<string, any>;
+
+export interface FetchConfig {
+    url: string;
+    params?: ParamsType;
+    skip?: boolean;
+    headers?: AxiosRequestHeaders;
+}

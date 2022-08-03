@@ -3,27 +3,36 @@ import { useCallback, useEffect, useReducer } from "react";
 import { useAxios } from "../context";
 import { AxiosFetchStatus } from "../reducers";
 import { AxiosFetchReducer, TAxiosFetchReducer } from "../reducers/use-fetch-reducer";
-import { AxiosFetcher, AxiosFetchInfo, REDUCER_INITIAL_STATE } from "./constants";
+import { AxiosFetcher, AxiosFetchInfo, FetchConfig, REDUCER_INITIAL_STATE } from "./constants";
 import { useMounted } from "./useMounted";
 
 export type AxiosFetchPolicy = "cache-only" | "cache-and-network" | "network-only";
-export interface UseFetchConfig<P = Record<string, any>> {
-    url: string;
+
+export interface UseFetchConfig extends FetchConfig {
+    /**
+     * Choose how you would like to fetch data: (1) cache-only, (2) network-only, (3) cache-and-network [default]
+     */
     fetchPolicy?: AxiosFetchPolicy;
-    params?: P;
-    skip?: boolean;
+    /**
+     * How often you would like to fetch data.
+     */
+    pollInterval?: number;
 }
 
 export type UseFetchReturn<D = any> = [D | undefined, AxiosFetchInfo<D>, AxiosFetcher];
 
 /**
- * A hook to fetch data from the provided `url`.
+ * A hook to fetch data from the provided `url`..
  * @param options `UseFetchOptions`
  */
-export function useFetch<D = any, P = Record<string, any>>(
-    options: UseFetchConfig<P>
-): UseFetchReturn<D> {
-    const { params, url, fetchPolicy = "cache-and-network", skip } = options;
+export function useFetch<D = any>(options: UseFetchConfig): UseFetchReturn<D> {
+    const {
+        url,
+        fetchPolicy = "cache-and-network",
+        skip,
+        pollInterval = 0,
+        ...axiosClientOptions
+    } = options;
 
     const ReactAxios = useAxios();
 
@@ -39,11 +48,15 @@ export function useFetch<D = any, P = Record<string, any>>(
     );
 
     const okToFetch = mounted && !skip;
+    const shouldPoll = pollInterval > 0 && okToFetch;
 
-    const performAxiosAction = useCallback<AxiosFetcher<void>>(
+    const performAxiosAction = useCallback<AxiosFetcher>(
         async options => {
             const axiosFetchFunction = () =>
-                ReactAxios.client.get<D>(url, { params: options ?? params });
+                ReactAxios.client.get<D>(url, {
+                    ...axiosClientOptions,
+                    params: options ?? axiosClientOptions.params,
+                });
 
             try {
                 switch (fetchPolicy) {
@@ -72,14 +85,26 @@ export function useFetch<D = any, P = Record<string, any>>(
                 dispatch({ type: "ERROR", payload: error as AxiosError });
             }
         },
-        [params, url, fetchPolicy]
+        [axiosClientOptions, url, fetchPolicy]
     );
 
     useEffect(() => {
         if (okToFetch) {
-            performAxiosAction(params);
+            performAxiosAction(axiosClientOptions.params);
         }
-    }, [okToFetch, params]);
+    }, [okToFetch, axiosClientOptions.params]);
+
+    useEffect(() => {
+        if (!shouldPoll) return;
+
+        const pollingInterval = setInterval(() => {
+            performAxiosAction(axiosClientOptions.params);
+        }, pollInterval);
+
+        return () => {
+            clearInterval(pollingInterval);
+        };
+    }, [shouldPoll]);
 
     return [
         state.data,

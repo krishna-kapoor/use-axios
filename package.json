@@ -1,6 +1,6 @@
 {
     "name": "@krishna-kapoor/use-axios",
-    "version": "1.0.5-alpha",
+    "version": "1.0.6-alpha",
     "description": "A toolkit to fetch using Axios in ReactJS with built-in caching.",
     "main": "index.js",
     "keywords": [
@@ -9,7 +9,7 @@
         "react"
     ],
     "author": "",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "axios": "^0.27.2",
         "react": "^18.2.0"
@@ -19,5 +19,8 @@
     },
     "publishConfig": {
         "access": "public"
+    },
+    "scripts": {
+        "genLock": "npm i --package-lock-only"
     }
 }

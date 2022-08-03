@@ -3,23 +3,23 @@ import { useCallback, useReducer } from "react";
 import { useAxios } from "../context";
 import { AxiosFetchStatus } from "../reducers";
 import { AxiosLazyFetchReducer, TAxiosLazyFetchReducer } from "../reducers/use-lazy-fetch-reducer";
-import { AxiosFetcher, AxiosFetchInfo, REDUCER_INITIAL_STATE } from "./constants";
+import { AxiosFetcher, AxiosFetchInfo, FetchConfig, REDUCER_INITIAL_STATE } from "./constants";
 
-export interface UseLazyFetchConfig<P = Record<string, any>> {
-    url: string;
-    params?: P;
-    skip?: boolean;
-}
+export interface UseLazyFetchConfig extends FetchConfig {}
 
 export interface AxiosData<D> {
     error: AxiosError<unknown, D> | undefined;
     data: D | undefined;
 }
 
-export type useLazyFetchReturn<D> = [AxiosFetcher<AxiosData<D>>, AxiosFetchInfo];
+export type UseLazyFetchReturn<D> = [AxiosFetcher<AxiosData<D>>, AxiosFetchInfo];
 
-export function useLazyFetch<D = any, P = any>(options: UseLazyFetchConfig<P>) {
-    const { params, url, skip } = options;
+/**
+ * A hook to lazy fetch data from the provided `url`.
+ * @param options `UseLazyFetchConfig`
+ */
+export function useLazyFetch<D = any>(options: UseLazyFetchConfig): UseLazyFetchReturn<D> {
+    const { url, skip, ...axiosClientOptions } = options;
 
     const ReactAxios = useAxios();
 
@@ -35,7 +35,10 @@ export function useLazyFetch<D = any, P = any>(options: UseLazyFetchConfig<P>) {
     const performAxiosAction = useCallback<AxiosFetcher<AxiosData<D>>>(
         async options => {
             const axiosFetchFunction = () =>
-                ReactAxios.client.get<D>(url, { params: options ?? params });
+                ReactAxios.client.get<D>(url, {
+                    ...axiosClientOptions,
+                    params: options ?? axiosClientOptions.params,
+                });
 
             if (skip) return { data: undefined, error: undefined };
 
@@ -52,7 +55,7 @@ export function useLazyFetch<D = any, P = any>(options: UseLazyFetchConfig<P>) {
                 data: state.data,
             };
         },
-        [params, url, skip]
+        [axiosClientOptions, url, skip]
     );
 
     return [
