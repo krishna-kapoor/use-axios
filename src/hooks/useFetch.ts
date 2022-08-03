@@ -107,6 +107,8 @@ export function useFetch<D = any>(options: UseFetchConfig): UseFetchReturn<D> {
                         return dispatch({ type: "CACHE-AND-NETWORK-FETCHED", payload: res_2.data });
                 }
             } catch (error) {
+                if ((error as AxiosError).name === "CanceledError") return;
+
                 dispatch({ type: "ERROR", payload: error as AxiosError });
             }
         },
