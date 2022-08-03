@@ -1,6 +1,6 @@
 {
     "name": "@krishna-kapoor/use-axios",
-    "version": "1.0.7-alpha",
+    "version": "1.0.8-alpha",
     "description": "A toolkit to fetch using Axios in ReactJS with built-in caching.",
     "main": "index.js",
     "keywords": [
