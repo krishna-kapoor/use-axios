@@ -12,7 +12,7 @@ export interface AxiosData<D> {
     data: D | undefined;
 }
 
-export type UseLazyFetchReturn<D> = [AxiosFetcher<AxiosData<D>>, AxiosFetchInfo];
+export type UseLazyFetchReturn<D> = [AxiosFetcher<AxiosData<D>>, AxiosFetchInfo & AxiosData<D>];
 
 /**
  * A hook to lazy fetch data from the provided `url`.
@@ -61,9 +61,8 @@ export function useLazyFetch<D = any>(options: UseLazyFetchConfig): UseLazyFetch
     return [
         performAxiosAction,
         {
-            error: state.error,
+            ...state,
             loading: state.status === AxiosFetchStatus.LOADING,
-            status: state.status,
         },
     ];
 }

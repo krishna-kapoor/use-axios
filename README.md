@@ -42,3 +42,22 @@ export function Component() {
     );
 }
 ```
+
+## useLazyFetch
+
+A hook to lazy fetch data from the provided `url`
+
+```tsx
+export function Component() {
+    const [lazyFetch, { data, loading, error, status }] = useLazyFetch<YourDataType>({
+        url: "<your-url>",
+    });
+
+    return (
+        <div>
+            Display your data here.
+            <button onClick={() => lazyFetch()}>Fetch again?</button>
+        </div>
+    );
+}
+```
