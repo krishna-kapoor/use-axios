@@ -1,15 +1,15 @@
 import * as React from "react";
 
 export function useMounted() {
-    const [mounted, setMounted] = React.useState(false);
+    const mountRef = React.useRef(true);
 
     React.useEffect(() => {
-        setMounted(true);
+        mountRef.current = true;
 
         return () => {
-            setMounted(false);
+            mountRef.current = false;
         };
     }, []);
 
-    return mounted;
+    return mountRef.current;
 }
