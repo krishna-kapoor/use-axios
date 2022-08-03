@@ -12,6 +12,7 @@ export interface AxiosFetchInfo<D = any> {
     error: AxiosFetchReducerState<D>["error"];
     loading: boolean;
     status: AxiosFetchStatus;
+    clearErrors(): void;
 }
 
 export type AxiosFetcher<R = void> = <P>(options?: P) => Promise<R>;

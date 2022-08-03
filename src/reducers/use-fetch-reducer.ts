@@ -1,6 +1,13 @@
 import { AxiosError } from "axios";
 import { Reducer } from "react";
-import { Action, ActionWithoutPayload, AxiosFetchStatus, ErrorAction, FetchingAction } from ".";
+import {
+    Action,
+    ActionWithoutPayload,
+    AxiosFetchStatus,
+    ClearErrorsAction,
+    ErrorAction,
+    FetchingAction,
+} from ".";
 import { AxiosCache } from "../cache";
 import { UseFetchConfig } from "../hooks/useFetch";
 
@@ -9,7 +16,8 @@ type ReducerActions<D = any> =
     | ActionWithoutPayload<"CACHE-ONLY-FETCHED">
     | Action<"CACHE-AND-NETWORK-FETCHED", D>
     | Action<"NETWORK-ONLY-FETCHED", D>
-    | ErrorAction<D>;
+    | ErrorAction<D>
+    | ClearErrorsAction;
 
 export interface AxiosFetchReducerState<D = any> {
     data: D | undefined;
@@ -20,7 +28,10 @@ export interface AxiosFetchReducerState<D = any> {
 export type TAxiosFetchReducer<D = any> = Reducer<AxiosFetchReducerState<D>, ReducerActions<D>>;
 
 export function AxiosFetchReducer(cache: AxiosCache, options: UseFetchConfig) {
-    return <D>(state: AxiosFetchReducerState<D>, action: ReducerActions<D>) => {
+    return <D>(
+        state: AxiosFetchReducerState<D>,
+        action: ReducerActions<D>
+    ): AxiosFetchReducerState<D> => {
         switch (action.type) {
             case "FETCHING":
                 return {
@@ -64,6 +75,12 @@ export function AxiosFetchReducer(cache: AxiosCache, options: UseFetchConfig) {
                     ...state,
                     error: action.payload,
                     status: AxiosFetchStatus.ERROR,
+                };
+
+            case "CLEAR-ERRORS":
+                return {
+                    ...state,
+                    error: undefined,
                 };
 
             default:

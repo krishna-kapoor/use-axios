@@ -5,6 +5,7 @@ export type ActionWithoutPayload<T> = { type: T };
 
 export type ErrorAction<D> = Action<"ERROR", AxiosError<unknown, D>>;
 export type FetchingAction = ActionWithoutPayload<"FETCHING">;
+export type ClearErrorsAction = ActionWithoutPayload<"CLEAR-ERRORS">;
 
 export interface ReducerState<D = any> {
     data: D | undefined;

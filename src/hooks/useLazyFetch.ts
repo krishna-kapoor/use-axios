@@ -32,6 +32,8 @@ export function useLazyFetch<D = any>(options: UseLazyFetchConfig): UseLazyFetch
         REDUCER_INITIAL_STATE
     );
 
+    const clearErrors = useCallback(() => dispatch({ type: "CLEAR-ERRORS" }), []);
+
     const performAxiosAction = useCallback<AxiosFetcher<AxiosData<D>>>(
         async options => {
             const axiosFetchFunction = () =>
@@ -63,6 +65,7 @@ export function useLazyFetch<D = any>(options: UseLazyFetchConfig): UseLazyFetch
         {
             ...state,
             loading: state.status === AxiosFetchStatus.LOADING,
+            clearErrors,
         },
     ];
 }

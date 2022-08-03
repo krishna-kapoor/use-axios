@@ -62,8 +62,6 @@ export function useFetch<D = any>(options: UseFetchConfig): UseFetchReturn<D> {
         throw new Error("Please wrap your application with `AxiosProvider`.");
     }
 
-    const AbortSignal = useAbortController();
-
     const mounted = useMounted();
 
     const [state, dispatch] = useReducer<TAxiosFetchReducer<D>>(
@@ -74,13 +72,14 @@ export function useFetch<D = any>(options: UseFetchConfig): UseFetchReturn<D> {
     const okToFetch = mounted && !skip;
     const shouldPoll = pollInterval > 0 && okToFetch;
 
+    const clearErrors = useCallback(() => dispatch({ type: "CLEAR-ERRORS" }), []);
+
     const performAxiosAction = useCallback<AxiosFetcher>(
         async options => {
             const axiosFetchFunction = () =>
                 ReactAxios.client.get<D>(url, {
                     ...axiosClientOptions,
                     params: options ?? axiosClientOptions.params,
-                    signal: AbortSignal(),
                 });
 
             try {
@@ -107,8 +106,6 @@ export function useFetch<D = any>(options: UseFetchConfig): UseFetchReturn<D> {
                         return dispatch({ type: "CACHE-AND-NETWORK-FETCHED", payload: res_2.data });
                 }
             } catch (error) {
-                if ((error as AxiosError).name === "CanceledError") return;
-
                 dispatch({ type: "ERROR", payload: error as AxiosError });
             }
         },
@@ -139,6 +136,7 @@ export function useFetch<D = any>(options: UseFetchConfig): UseFetchReturn<D> {
             error: state.error,
             loading: state.status === AxiosFetchStatus.LOADING,
             status: state.status,
+            clearErrors,
         },
         performAxiosAction,
     ];

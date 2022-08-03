@@ -1,7 +1,14 @@
 import { Reducer } from "react";
-import { Action, AxiosFetchStatus, ErrorAction, FetchingAction, ReducerState } from ".";
+import {
+    Action,
+    AxiosFetchStatus,
+    ClearErrorsAction,
+    ErrorAction,
+    FetchingAction,
+    ReducerState,
+} from ".";
 
-type ReducerActions<D> = Action<"FETCHED", D> | FetchingAction | ErrorAction<D>;
+type ReducerActions<D> = Action<"FETCHED", D> | FetchingAction | ErrorAction<D> | ClearErrorsAction;
 
 export type TAxiosLazyFetchReducer<D = any> = Reducer<ReducerState<D>, ReducerActions<D>>;
 
@@ -16,6 +23,8 @@ export function AxiosLazyFetchReducer<D = any>(
             return { ...state, status: AxiosFetchStatus.LOADING };
         case "ERROR":
             return { ...state, status: AxiosFetchStatus.ERROR };
+        case "CLEAR-ERRORS":
+            return { ...state, error: undefined };
         default:
             throw new Error("[useLazyFetch] Unknown action type: " + (action as any).type);
     }
